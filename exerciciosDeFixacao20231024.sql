@@ -20,3 +20,22 @@ CREATE TRIGGER att_cliente AFTER UPDATE ON Clientes
 		INSERT INTO Auditoria VALUES(nome_antigo, nome_novo);
 	END //
 DELIMITER ;
+
+-- 4.
+DELIMITER //
+CREATE TRIGGER impedir_insercao BEFORE UPDATE ON Clientes
+	FOR EACH ROW
+	BEGIN
+		DECLARE nome_antigo VARCHAR(255);
+		DECLARE nome_novo VARCHAR(255);
+
+		SET nome_antigo = OLD.nome;
+		SET nome_novo = NEW.nome;
+
+		IF novo_nome IS NULL OR novo_nome = '' THEN
+			INSERT INTO Auditoria VALUES("Houve uma tentativa de atualizar um nome da tabela Clientes para NULL ou vazio");
+			SIGNAL SQLSTATE "45000"
+			SET MESSAGE_TEXT = "Não há permissão para atualizar um nome da tabela Clientes para NULL ou vazio";
+		END IF;
+	END //
+DELIMITER ;
